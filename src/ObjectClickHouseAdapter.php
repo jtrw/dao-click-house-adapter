@@ -3,6 +3,8 @@
 namespace Jtrw\DAO;
 
 use ClickHouseDB\Client;
+use Jtrw\DAO\ValueObject\ArrayLiteral;
+use Jtrw\DAO\ValueObject\StringLiteral;
 use Jtrw\DAO\ValueObject\ValueObjectInterface;
 
 class ObjectClickHouseAdapter extends ObjectAdapter
@@ -19,17 +21,29 @@ class ObjectClickHouseAdapter extends ObjectAdapter
     
     public function quote(string $obj, int $type = 0): string
     {
-        // TODO: Implement quote() method.
+        return $obj;
     }
     
     public function getRow(string $sql): ValueObjectInterface
     {
-        // TODO: Implement getRow() method.
+        $result = $this->db->select($sql)->fetchOne();
+    
+        if (!$result) {
+            $result = [];
+        }
+    
+        return new ArrayLiteral($result);
     }
     
     public function getAll(string $sql): ValueObjectInterface
     {
-        // TODO: Implement getAll() method.
+        $result = $this->db->select($sql)->rows();
+    
+        if (!$result) {
+            $result = [];
+        }
+    
+        return new ArrayLiteral($result);
     }
     
     public function getCol(string $sql): ValueObjectInterface
@@ -37,9 +51,11 @@ class ObjectClickHouseAdapter extends ObjectAdapter
         // TODO: Implement getCol() method.
     }
     
-    public function getOne(string $sql): ValueObjectInterface
+    public function getOne(string $sql): StringLiteral
     {
-        // TODO: Implement getOne() method.
+        $result = $this->db->select($sql)->fetchOne() ?? '';
+    
+        return new StringLiteral($result);
     }
     
     public function getAssoc(string $sql): ValueObjectInterface
@@ -64,8 +80,15 @@ class ObjectClickHouseAdapter extends ObjectAdapter
     
     public function query(string $sql): int
     {
-        // TODO: Implement query() method.
+        return (int) $this->db->write($sql)->countAll();
     }
+    
+    public function insert(string $table, array $values, bool $isUpdateDuplicate = false): int
+    {
+        $sql = $this->getInsertSQL($table, $values, $isUpdateDuplicate);
+        
+        return $this->query($sql);
+    } // end insert
     
     public function getInsertID(): int
     {
