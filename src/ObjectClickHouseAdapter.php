@@ -16,6 +16,7 @@ class ObjectClickHouseAdapter extends ObjectAdapter
     
     public function __construct(Client $db)
     {
+        $this->db = $db;
         parent::__construct($db);
     } // end __construct
     
@@ -97,6 +98,6 @@ class ObjectClickHouseAdapter extends ObjectAdapter
     
     public function getDatabaseType(): string
     {
-        // TODO: Implement getDatabaseType() method.
+        return "clickhouse";
     }
 }

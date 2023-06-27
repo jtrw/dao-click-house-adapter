@@ -23,9 +23,10 @@ services:
     working_dir: /app
 
   clickhouse:
+    container_name: ${APP_COMPOSE_PROJECT_NAME}_clickhouse
     image: bitnami/clickhouse:latest
     environment:
-      - ALLOW_EMPTY_PASSWORD=no
+      - CLICKHOUSE_ADMIN_PASSWORD=password123
     networks:
       - dao-network
 
