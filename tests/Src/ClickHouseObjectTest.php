@@ -47,6 +47,92 @@ class ClickHouseObjectTest extends TestCase
         Assert::assertEquals($values['id'], $resultData['id']);
     }
     
+    public function testDelete()
+    {
+        $idSetting = 2222;
+        
+        $values = [
+            'id' => 2222,
+        ];
+        
+        $this->db->insert(static::TABLE_TEST, $values);
+        Assert::assertIsInt($idSetting);
+
+        $this->removeSettingRow($idSetting);
+
+        $search = [
+            'id' => $idSetting
+        ];
+
+        $sql = "SELECT * FROM ".static::TABLE_TEST;
+
+        $result = $this->db->select($sql, $search, [], DataAccessObjectInterface::FETCH_ROW);
+
+        Assert::assertEmpty($result->toNative());
+    }
+    
+    private function removeSettingRow(int $id): void
+    {
+        $this->db->delete(static::TABLE_TEST, ['id' => $id]);
+    }
+    
+    public function testDeleteTable()
+    {
+        $tableName = "test_".time();
+        $sql = "CREATE TABLE {$tableName} (id UInt64) ENGINE = MergeTree ORDER BY id;";
+        $this->db->query($sql);
+
+        $sqlSelect = "SELECT * FROM ".$tableName;
+
+        $result = $this->db->select($sqlSelect)->toNative();
+        Assert::assertEmpty($result);
+
+        $this->db->deleteTable($tableName);
+
+        try {
+            $this->db->select($sqlSelect)->toNative();
+            Assert::fail('DatabaseException was not thrown');
+        } catch (\ClickHouseDB\Exception\DatabaseException $exp) {
+            $msg = sprintf("Table default.%s doesn't exist.", $tableName);
+            Assert::assertEquals($exp->getCode(), 60);
+            Assert::assertStringContainsString($msg, $exp->getMessage(), "Message Not Found");
+        }
+    }
+    
+//    public function testUpdate()
+//    {
+//        $sql = "SELECT * FROM ".static::TABLE_TEST;
+//
+//        $result = $this->db->select($sql);
+//        Assert::assertInstanceOf(ValueObjectInterface::class, $result);
+//
+//        $resultData = $result->toNative();
+//
+//        Assert::assertNotEmpty($resultData[0]);
+//        $currentValue = $resultData[0];
+//
+//        $newId = 1111111;
+//        $values = [
+//            'id' => $newId
+//        ];
+//
+//        $search = [
+//            'id' => $currentValue['id']
+//        ];
+//
+//        $result = $this->db->update(static::TABLE_TEST, $values, $search);
+//        Assert::assertIsInt($result);
+//
+//        $sql = "SELECT * FROM ".static::TABLE_TEST;
+//
+//        $result = $this->db->select($sql, ['id' => $newId], [], DataAccessObjectInterface::FETCH_ROW);
+//        Assert::assertInstanceOf(ValueObjectInterface::class, $result);
+//
+//        $resultData = $result->toNative();
+//        Assert::assertNotEmpty($resultData);
+//        Assert::assertEquals($resultData['id'], $values['id']);
+//    }
+    
 //    public function testMassInsert()
 //    {
 //        $values = [
@@ -105,61 +191,7 @@ class ClickHouseObjectTest extends TestCase
 //        Assert::assertEquals($values[1]['value'], $resultData['value']);
 //    }
 //
-//    public function testUpdate()
-//    {
-//        $sql = "SELECT * FROM ".static::TABLE_TEST;
 //
-//        $result = $this->db->select($sql, [], [], DataAccessObjectInterface::FETCH_ALL);
-//        Assert::assertInstanceOf(ValueObjectInterface::class, $result);
-//
-//        $resultData = $result->toNative();
-//
-//        Assert::assertNotEmpty($resultData[0]);
-//        $currentValue = $resultData[0];
-//
-//        $values = [
-//            'value' => "NewValueWithTimeStamp".time()
-//        ];
-//
-//        $search = [
-//            'id' => $currentValue['id']
-//        ];
-//
-//        $result = $this->db->update(static::TABLE_TEST, $values, $search);
-//        Assert::assertIsInt($result);
-//
-//        $sql = "SELECT * FROM settings";
-//
-//        $result = $this->db->select($sql, $search, [], DataAccessObjectInterface::FETCH_ROW);
-//        Assert::assertInstanceOf(ValueObjectInterface::class, $result);
-//
-//        $resultData = $result->toNative();
-//        Assert::assertNotEmpty($resultData);
-//        Assert::assertEquals($resultData['value'], $values['value']);
-//    }
-//
-//    public function testDelete()
-//    {
-//        $values = [
-//            'id_parent' => 0,
-//            'caption'   => 'forDelete',
-//            'value'     => 'dataTest'
-//        ];
-//        $idSetting = $this->db->insert(static::TABLE_TEST, $values);
-//        Assert::assertIsInt($idSetting);
-//
-//        $this->removeSettingRow($idSetting);
-//
-//        $search = [
-//            'id' => $idSetting
-//        ];
-//
-//        $sql = "SELECT * FROM ".static::TABLE_TEST;
-//
-//        $result = $this->db->select($sql, $search, [], DataAccessObjectInterface::FETCH_ROW);
-//
-//        Assert::assertEmpty($result->toNative());
-//    }
 //
 //    public function testAssoc()
 //    {
@@ -414,39 +446,5 @@ class ClickHouseObjectTest extends TestCase
 //        $this->removeSettingRow($idSetting);
 //    }
 //
-//    public function testDeleteTable()
-//    {
-//        $tableName = "test_".time();
-//        $sql = "CREATE TABLE {$tableName} (id int unsigned not null)";
-//        $this->db->query($sql);
-//
-//        $sqlSelect = "SELECT * FROM ".$tableName;
-//
-//        $result = $this->db->select($sqlSelect, [], [], DataAccessObjectInterface::FETCH_ALL)->toNative();
-//        Assert::assertEmpty($result);
-//
-//        $this->db->deleteTable($tableName);
-//
-//        try {
-//            $this->db->select($sqlSelect, [], [], DataAccessObjectInterface::FETCH_ALL)->toNative();
-//            $this->fail('DatabaseException was not thrown');
-//        } catch (DatabaseException $exp) {
-//            $msg = sprintf(" Table 'dao.%s' doesn't", $tableName);
-//            Assert::assertEquals($exp->getQuery(), $sqlSelect);
-//            Assert::assertStringContainsString($msg, $exp->getMessage(), "Message Not Found");
-//        }
-//    }
-//
-//    public function testSetForeignKeyChecks()
-//    {
-//        $this->db->setForeignKeyChecks(true);
-//    }
-//
-//    private function removeSettingRow(int $id): void
-//    {
-//        $countRows = $this->db->delete(static::TABLE_TEST, ['id' => $id]);
-//
-//        Assert::assertEquals(1, $countRows);
-//    }
     
 }
