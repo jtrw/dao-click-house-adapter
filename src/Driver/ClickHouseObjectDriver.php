@@ -29,6 +29,6 @@ class ClickHouseObjectDriver extends AbstractObjectDriver
     
     public function getTables(DataAccessObjectInterface $object): array
     {
-        // TODO: Implement getTables() method.
+        return $object->getCol("SHOW TABLES")->toNative();
     }
 }

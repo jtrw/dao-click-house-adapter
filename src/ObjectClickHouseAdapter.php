@@ -3,6 +3,7 @@
 namespace Jtrw\DAO;
 
 use ClickHouseDB\Client;
+use Jtrw\DAO\Exceptions\DatabaseException;
 use Jtrw\DAO\ValueObject\ArrayLiteral;
 use Jtrw\DAO\ValueObject\StringLiteral;
 use Jtrw\DAO\ValueObject\ValueObjectInterface;
@@ -49,7 +50,13 @@ class ObjectClickHouseAdapter extends ObjectAdapter
     
     public function getCol(string $sql): ValueObjectInterface
     {
-        // TODO: Implement getCol() method.
+        $result = $this->db->select($sql)->fetchOne();
+    
+        if (!$result) {
+            $result = [];
+        }
+    
+        return new ArrayLiteral(array_values($result));
     }
     
     public function getOne(string $sql): StringLiteral
@@ -61,7 +68,21 @@ class ObjectClickHouseAdapter extends ObjectAdapter
     
     public function getAssoc(string $sql): ValueObjectInterface
     {
-        // TODO: Implement getAssoc() method.
+        $reg = "#SELECT (\w+\.?\w{0,}),?#mis";
+        
+        if (!preg_match($reg, $sql, $matches)) {
+            throw new DatabaseException("Can't find Assoc column");
+        }
+        
+        $path = $matches[1] ?? "";
+        
+        $result = $this->db->select($sql)->rowsAsTree($path);
+    
+        if (!$result) {
+            $result = [];
+        }
+    
+        return new ArrayLiteral($result);
     }
     
     public function begin(bool $isolationLevel = false)
