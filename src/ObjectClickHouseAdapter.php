@@ -112,6 +112,11 @@ class ObjectClickHouseAdapter extends ObjectAdapter
         return $this->query($sql);
     } // end insert
     
+    public function massInsert(string $table, array $values, bool $inForeach = false)
+    {
+        return $this->db->insertAssocBulk($table, $values)->count();
+    }
+    
     public function getInsertID(): int
     {
         // TODO: Implement getInsertID() method.
