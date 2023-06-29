@@ -99,6 +99,33 @@ class ClickHouseObjectTest extends TestCase
         }
     }
     
+    public function testGetTables()
+    {
+        Assert::assertSame(
+            $this->db->getTables(),
+            [
+                static::TABLE_TEST,
+            ]
+        );
+    }
+    
+    public function testAssoc()
+    {
+        $sql = "SELECT id FROM ".static::TABLE_TEST;
+
+        $fetchAssocObject = $this->db->select($sql, [], [], DataAccessObjectInterface::FETCH_ASSOC);
+        Assert::assertInstanceOf(ValueObjectInterface::class, $fetchAssocObject);
+
+        $fetchAllObject = $this->db->select($sql, [], [], DataAccessObjectInterface::FETCH_ALL);
+        Assert::assertInstanceOf(ValueObjectInterface::class, $fetchAllObject);
+
+        $assocData = $fetchAssocObject->toNative();
+        $allData = $fetchAllObject->toNative();
+        Assert::assertNotEmpty($allData[0]);
+
+        Assert::assertEquals($assocData[$allData[0]['id']]['id'], $allData[0]['id']);
+    }
+    
 //    public function testUpdate()
 //    {
 //        $sql = "SELECT * FROM ".static::TABLE_TEST;
@@ -189,37 +216,6 @@ class ClickHouseObjectTest extends TestCase
 //        $resultData = $result->toNative();
 //        Assert::assertNotEmpty($resultData);
 //        Assert::assertEquals($values[1]['value'], $resultData['value']);
-//    }
-//
-//
-//
-//    public function testAssoc()
-//    {
-//        $sql = "SELECT * FROM ".static::TABLE_TEST;
-//
-//        $fetchAssocObject = $this->db->select($sql, [], [], DataAccessObjectInterface::FETCH_ASSOC);
-//        Assert::assertInstanceOf(ValueObjectInterface::class, $fetchAssocObject);
-//
-//        $fetchAllObject = $this->db->select($sql, [], [], DataAccessObjectInterface::FETCH_ALL);
-//        Assert::assertInstanceOf(ValueObjectInterface::class, $fetchAllObject);
-//
-//        $assocData = $fetchAssocObject->toNative();
-//        $allData = $fetchAllObject->toNative();
-//        Assert::assertNotEmpty($allData[0]);
-//
-//        Assert::assertEquals($assocData[$allData[0]['id']]['value'], $allData[0]['value']);
-//    }
-//
-//    public function testGetTables()
-//    {
-//        Assert::assertSame(
-//            $this->db->getTables(),
-//            [
-//                "settings",
-//                "site_contents",
-//                "site_contents2settings"
-//            ]
-//        );
 //    }
 //
 //    public function testSuccessTransactions()
