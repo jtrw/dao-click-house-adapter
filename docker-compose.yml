@@ -25,8 +25,8 @@ services:
   clickhouse:
     container_name: ${APP_COMPOSE_PROJECT_NAME}_clickhouse
     image: bitnami/clickhouse:latest
-    environment:
-      - CLICKHOUSE_ADMIN_PASSWORD=password123
+    env_file:
+      - .env
     networks:
       - dao-network
 
