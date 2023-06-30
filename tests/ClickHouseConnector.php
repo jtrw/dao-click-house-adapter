@@ -26,20 +26,24 @@ class ClickHouseConnector
     
     private static function initClickHouse(): DataAccessObjectInterface
     {
-       // $dbName = getenv('MYSQL_DATABASE');
-       // $dsn = "mysql:dbname=dao;port=3306;host=dao_mariadb";
-    
-        $config = [
-            'host' => 'clickhouse',
-            'port' => '8123',
-            'username' => 'default',
-            'password' => 'password123'
-        ];
-        $db = new Client($config);
-    
+        // $dbName = getenv('MYSQL_DATABASE');
+        // $dsn = "mysql:dbname=dao;port=3306;host=dao_mariadb";
+        
+        $db = new Client(static::getConnectionConfig());
+        
         static::$sourceConnection = $db;
         
         return new ObjectClickHouseAdapter($db);
+    }
+    
+    private static function getConnectionConfig(): array
+    {
+        return [
+            'host'     => getenv('CLICKHOUSE_HOST'),
+            'port'     => getenv('CLICKHOUSE_PORT'),
+            'username' => getenv('CLICKHOUSE_USER'),
+            'password' => getenv('CLICKHOUSE_PASSWORD')
+        ];
     }
     
     public static function getInstance(): DataAccessObjectInterface
