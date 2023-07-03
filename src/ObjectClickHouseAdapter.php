@@ -124,6 +124,6 @@ class ObjectClickHouseAdapter extends ObjectAdapter
     
     public function getDatabaseType(): string
     {
-        return "clickhouse";
+        return "ClickHouse";
     }
 }

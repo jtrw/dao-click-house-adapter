@@ -9,7 +9,7 @@ use RuntimeException;
 
 class ClickHouseConnector
 {
-    public const DRIVER_NAME = "clickhouse";
+    public const DRIVER_NAME = "ClickHouse";
     
     /**
      * @var DataAccessObjectInterface
