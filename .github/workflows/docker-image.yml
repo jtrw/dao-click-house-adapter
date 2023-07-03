@@ -25,7 +25,7 @@ jobs:
       run: composer install -vvv
     
     - name: Phpunit
-      run: docker-compose run --rm --no-deps dao-click-house-adapter_php_fpm sh -lc 'php ./vendor/phpunit/phpunit/phpunit -c ./tests/phpunit.xml --testdox --stderr --coverage-clover=coverage.xml'
+      run: docker-compose run --rm --no-deps dao-click-house-adapter_dao_php sh -lc 'php ./vendor/phpunit/phpunit/phpunit -c ./tests/phpunit.xml --testdox --stderr --coverage-clover=coverage.xml'
 
     - name: Send code coverage report to Codecov.io
       uses: codecov/codecov-action@v2
