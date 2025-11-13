@@ -23,7 +23,8 @@ class ObjectClickHouseAdapter extends ObjectAdapter
     
     public function quote(string $obj, int $type = 0): string
     {
-        return $obj;
+        $escaped = str_replace(['\\', "'"], ['\\\\', "\\'"], $obj);
+        return "'" . $escaped . "'";
     }
     
     public function getRow(string $sql): ValueObjectInterface
@@ -61,27 +62,30 @@ class ObjectClickHouseAdapter extends ObjectAdapter
     
     public function getOne(string $sql): StringLiteral
     {
-        $result = $this->db->select($sql)->fetchOne() ?? '';
+        $result = $this->db->select($sql)->fetchOne();
+        if (is_array($result) && !empty($result)) {
+            $result = (string) reset($result);
+        } else {
+            $result = '';
+        }
     
         return new StringLiteral($result);
     }
     
     public function getAssoc(string $sql): ValueObjectInterface
     {
-        $reg = "#SELECT (\w+\.?\w{0,}),?#mis";
+        $rows = $this->db->select($sql)->rows();
         
-        if (!preg_match($reg, $sql, $matches)) {
-            throw new DatabaseException("Can't find Assoc column");
+        $result = [];
+        
+        foreach ($rows as $row) {
+            $val = array_shift($row);
+            if (count($row) === 1) {
+                $row = array_shift($row);
+            }
+            $result[$val] = $row;
         }
         
-        $path = $matches[1] ?? "";
-        
-        $result = $this->db->select($sql)->rowsAsTree($path);
-    
-        if (!$result) {
-            $result = [];
-        }
-    
         return new ArrayLiteral($result);
     }
     
