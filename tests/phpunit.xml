@@ -1,24 +1,17 @@
 <?xml version="1.0"?>
 <phpunit
         backupGlobals="true"
-        backupStaticAttributes="false"
         bootstrap="bootstrap.php"
         cacheResult="false"
         colors="true"
-        convertErrorsToExceptions="true"
-        convertNoticesToExceptions="true"
-        convertWarningsToExceptions="true"
-        forceCoversAnnotation="false"
         processIsolation="false"
         stopOnError="false"
         stopOnFailure="false"
         stopOnIncomplete="false"
         stopOnSkipped="false"
         stopOnRisky="false"
-        timeoutForSmallTests="1"
-        timeoutForMediumTests="10"
-        timeoutForLargeTests="60"
-        verbose="false">
+        displayDetailsOnTestsThatTriggerDeprecations="true"
+        displayDetailsOnTestsThatTriggerWarnings="true">
 
     <logging>
         <junit outputFile="reports/phpunit.xml" />
