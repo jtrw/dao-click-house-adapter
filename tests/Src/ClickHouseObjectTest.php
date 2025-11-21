@@ -153,37 +153,111 @@ class ClickHouseObjectTest extends TestCase
         Assert::assertEquals($values[1]['id'], $resultData['id']);
     }
     
-//    public function testUpdate()
-//    {
-//        $sql = "SELECT * FROM ".static::TABLE_TEST;
-//
-//        $result = $this->db->select($sql);
-//        Assert::assertInstanceOf(ValueObjectInterface::class, $result);
-//
-//        $resultData = $result->toNative();
-//
-//        Assert::assertNotEmpty($resultData[0]);
-//        $currentValue = $resultData[0];
-//
-//        $newId = 1111111;
-//        $values = [
-//            'id' => $newId
-//        ];
-//
-//        $search = [
-//            'id' => $currentValue['id']
-//        ];
-//
-//        $result = $this->db->update(static::TABLE_TEST, $values, $search);
-//        Assert::assertIsInt($result);
-//
-//        $sql = "SELECT * FROM ".static::TABLE_TEST;
-//
-//        $result = $this->db->select($sql, ['id' => $newId], [], DataAccessObjectInterface::FETCH_ROW);
-//        Assert::assertInstanceOf(ValueObjectInterface::class, $result);
-//
-//        $resultData = $result->toNative();
-//        Assert::assertNotEmpty($resultData);
-//        Assert::assertEquals($resultData['id'], $values['id']);
-//    }
+    /**
+     * Test UPDATE mutation in ClickHouse.
+     * Note: ClickHouse mutations are asynchronous, so we only verify the query executes.
+     */
+    public function testUpdate()
+    {
+        $id = random_int(100000, 200000);
+        $values = [
+            'id' => $id,
+        ];
+
+        $this->db->insert(static::TABLE_TEST, $values);
+
+        // Execute UPDATE mutation
+        $updateValues = [
+            'id' => $id + 1
+        ];
+
+        $search = [
+            'id' => $id
+        ];
+
+        $result = $this->db->update(static::TABLE_TEST, $updateValues, $search);
+        Assert::assertIsInt($result);
+    }
+
+    /**
+     * Test getTableIndexes returns array with table info and data skipping indexes.
+     */
+    public function testGetTableIndexes()
+    {
+        $indexes = $this->db->getTableIndexes(static::TABLE_TEST);
+
+        Assert::assertIsArray($indexes);
+        Assert::assertArrayHasKey('table_info', $indexes);
+        Assert::assertArrayHasKey('data_skipping_indexes', $indexes);
+    }
+
+    /**
+     * Test setForeignKeyChecks does not throw an exception.
+     * ClickHouse doesn't support foreign keys, but method should work for interface compatibility.
+     */
+    public function testSetForeignKeyChecks()
+    {
+        // Should not throw exception
+        $this->db->setForeignKeyChecks(true);
+        $this->db->setForeignKeyChecks(false);
+        Assert::assertTrue(true);
+    }
+
+    /**
+     * Test getInsertID returns 0 for ClickHouse.
+     * ClickHouse doesn't support auto-increment IDs.
+     */
+    public function testGetInsertID()
+    {
+        $id = random_int(200000, 300000);
+        $values = [
+            'id' => $id,
+        ];
+
+        $this->db->insert(static::TABLE_TEST, $values);
+
+        // ClickHouse doesn't support auto-increment, should return 0
+        $insertId = $this->db->getInsertID();
+        Assert::assertEquals(0, $insertId);
+    }
+
+    /**
+     * Test transaction methods don't throw exceptions.
+     * ClickHouse doesn't support traditional ACID transactions,
+     * but methods should work for interface compatibility.
+     */
+    public function testTransactions()
+    {
+        // Should not throw exceptions
+        $this->db->begin();
+
+        $id = random_int(300000, 400000);
+        $values = [
+            'id' => $id,
+        ];
+        $this->db->insert(static::TABLE_TEST, $values);
+
+        $this->db->commit();
+
+        // Test rollback also doesn't throw
+        $this->db->begin();
+        $this->db->rollback();
+
+        Assert::assertTrue(true);
+    }
+
+    /**
+     * Test inTransaction returns false for ClickHouse.
+     * ClickHouse doesn't support traditional transactions.
+     */
+    public function testInTransaction()
+    {
+        Assert::assertFalse($this->db->inTransaction());
+
+        $this->db->begin();
+        // Even after begin, should be false (ClickHouse doesn't really track this)
+        Assert::assertFalse($this->db->inTransaction());
+
+        $this->db->commit();
+    }
 }
