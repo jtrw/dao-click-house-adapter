@@ -89,19 +89,41 @@ class ObjectClickHouseAdapter extends ObjectAdapter
         return new ArrayLiteral($result);
     }
     
+    /**
+     * ClickHouse does not support traditional ACID transactions.
+     * This method is kept for interface compatibility but does nothing.
+     *
+     * @param bool $isolationLevel
+     * @return void
+     */
     public function begin(bool $isolationLevel = false)
     {
-        // TODO: Implement begin() method.
+        // ClickHouse does not support transactions in the traditional sense
+        // Operations are atomic at the block level
     }
-    
+
+    /**
+     * ClickHouse does not support traditional ACID transactions.
+     * This method is kept for interface compatibility but does nothing.
+     *
+     * @return void
+     */
     public function commit()
     {
-        // TODO: Implement commit() method.
+        // ClickHouse does not support transactions in the traditional sense
+        // Operations are atomic at the block level
     }
-    
+
+    /**
+     * ClickHouse does not support traditional ACID transactions.
+     * This method is kept for interface compatibility but does nothing.
+     *
+     * @return void
+     */
     public function rollback()
     {
-        // TODO: Implement rollback() method.
+        // ClickHouse does not support transactions in the traditional sense
+        // Operations are atomic at the block level
     }
     
     public function query(string $sql): int
@@ -121,11 +143,50 @@ class ObjectClickHouseAdapter extends ObjectAdapter
         return $this->db->insertAssocBulk($table, $values)->count();
     }
     
+    /**
+     * ClickHouse does not support auto-increment IDs in the traditional sense.
+     * This method returns 0 for interface compatibility.
+     *
+     * Note: ClickHouse tables typically use UInt64 or other types for IDs,
+     * and ID generation should be handled at the application level.
+     *
+     * @return int Always returns 0
+     */
     public function getInsertID(): int
     {
-        // TODO: Implement getInsertID() method.
+        return 0;
     }
     
+    /**
+     * Update rows in ClickHouse using ALTER TABLE ... UPDATE mutation.
+     *
+     * Note: ClickHouse UPDATE is asynchronous and uses mutations.
+     * The operation is not immediate and depends on merge operations.
+     * For real-time updates, consider using ReplacingMergeTree or other strategies.
+     *
+     * @param string $table
+     * @param array $values
+     * @param array $condition
+     * @return int Number of affected rows (always returns 0 for ClickHouse)
+     */
+    public function update(string $table, array $values, array $condition = []): int
+    {
+        $values = $this->getUpdateValues($values);
+
+        $sql = "ALTER TABLE ".$table." UPDATE ".implode(", ", $values);
+
+        if (is_array($condition)) {
+            $sqlCondition = $this->getSqlCondition($condition);
+            if ($sqlCondition) {
+                $sql .= sprintf(static::SQL_WHERE, implode(static::SQL_AND, $sqlCondition));
+            }
+        } else {
+            $sql .= sprintf(static::SQL_WHERE, $condition);
+        }
+
+        return $this->query($sql);
+    }
+
     public function getDatabaseType(): string
     {
         return "ClickHouse";
